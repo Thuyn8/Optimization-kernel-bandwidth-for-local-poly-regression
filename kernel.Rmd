@@ -18,44 +18,29 @@ ker_Epanechnikov<- function(u){ifelse(abs(u) <=1,(3/4)*(1-u^2), 0)}
 
 ```{r}
 poly <- function(x,y,ker, bw, xnew){
-  n <- length(x)
-  m <- length(xnew)
-  #Weight
-  sapply(x, function(xj){kernel((newx-xj)/h)})
+ n = length(x)
+  m <- length(newx)
+  pred <- rep(NA, length(newx))
   
-  for (i in 1:m){
-    X <-model.matrix(~poly((x - newx[i]), K, raw = T))
-    W <-sapply(x, function(xj){ker((newx[i]-xj)/h)})
-  }
+  # Weight
+  W <- sapply(x, function(xj){kernel((newx-xj)/h)})
+  
+  for ( i in 1: length(newx)){
+   X <-model.matrix(~poly(((x - newx[i])/h), K, raw = T))
+    
+    w <- diag(W[i,])
+     
+    #beta <- solve(t(X) %*% w %*% (X)) %*% t(X) %*% w %*%(y)
+    beta = solve(t(X) %*% w %*% (X),t(X) %*% w %*%(y))
+      
+      pred[i] <-beta[1]
+  } 
+ pred
 }
-  
+
 ```
 
-# optimal bandwidth : using CV
 
-```{r}
-CV <- function(x,y,limits=NULL, k=10){
-  
-  x<- sort(x)
-  y <- sort(y)
-  
-  fold <-as.integer(cut(sample(1:length(x)), breaks = k, labels= 1:k))
-  
-  mse <- function(h){
-    e <- 1:k
-    for (i in 1:k){
-      e[i] <- sum((y[fold ==i] - local_poly(x[fold == -i],y[fold==-i], K, h = h,kernel = dnorm, newx=x[fold ==i]))^2)
-    }
-    return(mean(e))
-  }
-  MSE <- sapply(H, mse(h))
-  
-  H[which.min(MSE)]
-  
-  
- 
-}
-```
 
 
 
@@ -86,26 +71,6 @@ CV <- function(x,y,H){
   
  
 }
-```
-
-
-```{r}
-set.seed(70)
-x <- sort(rnorm(50))
-y <- 2*x^3-5*x^2 + rnorm(50, 0, 0.1)
-length(y)
-plot(local_poly(y, x,K=4, h = 10), x=x)
-lines(x=x, y=y)
-plot(y~x)
-x1 <-runif(10, min = 5, max =10)
-lines(local_poly(y, x, K=3, h = 100,  newx =x1 )~x1)
-```
-
-
-# Kernel
-
-```{r}
-
 ```
 
 
